@@ -233,10 +233,16 @@ if isfield(s,'cdata') && ~isempty(s.cdata)
 %                 outstr = 'extracting labels'
                 %Converting from colour.label.gii
                 j = uint32(s.cdata(i));
-    %             c = s.labels.rgba(j);
-                r = s.labels.rgba(j, 1);
-                g = s.labels.rgba(j, 2);
-                b = s.labels.rgba(j, 3);
+                if j ~= 0
+        %             c = s.labels.rgba(j);
+                    r = s.labels.rgba(j, 1);
+                    g = s.labels.rgba(j, 2);
+                    b = s.labels.rgba(j, 3);
+                else
+                    r = 0;
+                    g = 0;
+                    b = 0;
+                end
         end
         fprintf(fid, '%f %f %f\n', r, g, b);
     end
