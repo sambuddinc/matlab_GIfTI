@@ -187,6 +187,20 @@ if isfield(s,'cdata') && ~isempty(s.cdata)
     fprintf(fid,'COLOR_SCALARS color 3\n');
     %Long Rainbow for scalar Area data
     %Long Rainbow scalar Myelin data
+%     s = size(s.cdata)
+    if strcmp(gtype, 'bw')
+        for i = 1:size(s.cdata)
+            m = max(s.cdata(i, :));
+            for j = 1:180
+                if m == s.cdata(i, j)
+                    bwData(i) = (j-1)/180;
+                end
+            end
+    %         y = i
+        end
+    end
+    
+    
     no_zeros = s.cdata(s.cdata~=0);
     norm_cdata = (s.cdata - min(no_zeros)) / (max(no_zeros) - min(no_zeros));
     for i = 1:size(s.cdata)
@@ -235,16 +249,84 @@ if isfield(s,'cdata') && ~isempty(s.cdata)
                 j = uint32(s.cdata(i));
                 if j ~= 0
         %             c = s.labels.rgba(j);
-                    r = s.labels.rgba(j, 1);
-                    g = s.labels.rgba(j, 2);
-                    b = s.labels.rgba(j, 3);
+                    r = s.labels.rgba(j+1, 1);
+                    g = s.labels.rgba(j+1, 2);
+                    b = s.labels.rgba(j+1, 3);
                 else
                     r = 0;
                     g = 0;
                     b = 0;
                 end
+            case {'bw'}
+%                 ind = bwData(i)
+                if bwData(i) == 0
+                    r = 1;
+                    g = 1;
+                    b = 1;
+                else
+                    a = (1-bwData(i))/0.2;
+                    x = floor(a);
+                    y = (a-x);
+                    switch x
+                        case 0
+                            r = 1;
+                            g = y;
+                            b = 0;
+                        case 1
+                            r = 1-y;
+                            g = 1;
+                            b = 0;
+                        case 2
+                            r = 0;
+                            g = 1;
+                            b = y;
+                        case 3
+                          r = 0;
+                          g = 1-y;
+                          b = 1;
+                        case 4
+                            r = y;
+                            g = 0;
+                            b = 1;
+                        case 5
+                            r = 1;
+                            g = 0;
+                            b = 1;
+                    end
+                end
+                
         end
         fprintf(fid, '%f %f %f\n', r, g, b);
+    end
+end
+
+%-SCALAR FIELD FOR BRAIN DISSECTION
+% ADD scalar as parcel number
+if strcmpi(gtype, 'label')
+    strrr = 'adding scalars'
+    fprintf(fid,'SCALARS %s %s 1\n','parcelID','float');
+    fprintf(fid,'LOOKUP_TABLE default\n');
+    foundNums = zeros(1, 181);
+    for i = 1:size(s.cdata)
+        l = uint32(s.cdata(i));
+        if l == 0
+            foundNums(181) = foundNums(181) + 1;
+        else
+            foundNums(l) = foundNums(l) + 1;
+        end
+        fprintf(fid, '%f\n', l);
+    end
+    numsFound = foundNums
+    total = sum(foundNums)
+end
+% Add in scalar weights of 1 for the 3d dissection
+if strcmpi(gtype, 'label')
+    strrr = 'adding scalars'
+    fprintf(fid,'SCALARS %s %s 1\n','weight','float');
+    fprintf(fid,'LOOKUP_TABLE default\n');
+    foundNums = zeros(1, 181);
+    for i = 1:size(s.cdata)
+        fprintf(fid, '%f\n', 10.0);
     end
 end
 
